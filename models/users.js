@@ -8,7 +8,6 @@ var UserSchema = new Schema({
     email: { type: String, required: true },
     phone: { type: String },
     createdDate: { type: Date, default: new Date() },
-    token: { type: String, default: "" },
 });
 
 module.exports = mongoose.model('Users', UserSchema);
