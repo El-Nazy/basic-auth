@@ -44,7 +44,7 @@ services.deleteUser = function (id) {
 }
 
 services.getAllUsers = function() {
-    return userModel.find({})
+    return userModel.find({}).select("firstName lastName _id email")
     .then(users => {
         return users.map(userData => userData.toObject())
     })
