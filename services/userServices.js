@@ -2,38 +2,65 @@ const bcrypt = require('bcrypt');
 var userModel = require('../models/users');
 var jwt = require("jsonwebtoken");
 
-var signupUser = function (userData) {
+var services = {};
+
+services.signupUser = function (userData) {
     var newUser = new userModel(
         { 
             firstName: userData.firstname ,
             lastName : userData.lastname,
             email : userData.email,
-            password: bcrypt.hashSync(userData.password, 8),
+            password: userData.password,
+            isAdmin: userData.isAdmin,
             phone : userData.phone
         }
     );
     return newUser.save();
 }
 
-async function signinUser (userData, callback) {
-    // Logic for user authentication
-    let userDetails;
-    await userModel.findOneAndUpdate({email: userData.email},
-        {token: jwt.sign({email: userData.email}, "privateKey")});
+services.signinUser = function (signinData) {
+    let userDetails = {};
 
-    document = await userModel.findOne({email: userData.email});
-
-    userObject = document.toObject();
-    if (bcrypt.compareSync(userData.password, userObject.password)) {
-        delete userObject._id;
-        delete userObject.password;
-        delete userObject.__v;
-
-        userDetails = userObject;
-    }
-    console.log(userDetails);
-    callback(userDetails);
+    return userModel.findOne({email: signinData.email})
+    .then((user) => {
+        userDetails = user.toObject();
+        console.log(userDetails);
+        if (bcrypt.compareSync(signinData.password, userDetails.password)) {
+            return jwt.sign({email: signinData.email, isAdmin: userDetails.isAdmin}, "privateKey")
+        }else{
+            throw new Error("Incorrect password");
+        }
+    })
+    .catch((error) => {
+        throw error;
+    });
 }
 
-module.exports.signupUser = signupUser;
-module.exports.signinUser = signinUser;
+services.deleteUser = function (id) {
+    return userModel.deleteOne({_id: id})
+    .catch(error => {
+        throw error;
+    })
+}
+
+services.getAllUsers = function() {
+    return userModel.find({})
+    .then(users => {
+        return users.map(userData => userData.toObject())
+    })
+    .catch(error => {
+        throw error;
+    })
+}
+
+services.getUser = function(id) {
+    return userModel.findOne({_id: id})
+    .then(user => {
+        return user;
+    })
+    .catch(error => {
+        throw error;
+    })
+}
+
+module.exports = services;

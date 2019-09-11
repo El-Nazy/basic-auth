@@ -1,5 +1,3 @@
-var jwt = require("jsonwebtoken");
-var bycrypt = require("bcrypt");
 var express = require('express');
 var app = express("jsonwebtoken");
 var http = require('http');
@@ -16,10 +14,17 @@ app.use(express.json());
 app.use(express.static("/public"));
 app.use(express.urlencoded({extended : false}));
 
-
 var server = http.createServer(app);
 
 app.use('/api', appRoutes(Router))
+app.use((error, req, res, next) => {
+    res.status(error.status || 500);
+    res.send({
+        success: false,
+        message: "sorry an error occured",
+        data: error
+    });
+})
 
 server.listen(port);
 
